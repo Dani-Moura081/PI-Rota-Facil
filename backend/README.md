@@ -28,16 +28,19 @@ backend/
 └── .env                   # Variáveis de ambiente (não versionado)
 ```
 
-## Configuração e Execução
+## Configuração e Execução (Rápido)
 
-1. Instale as dependências:
-```
+1. Instale as dependências do backend:
+```powershell
+cd backend
 npm install
 ```
 
-2. Configure o banco de dados MySQL e crie as tabelas executando o script `database.sql`.
+2. Configure o banco de dados MySQL:
+- Crie o banco de dados e as tabelas executando `backend/database.sql` (por exemplo via MySQL Workbench ou `mysql -u user -p < database.sql`).
+  - Caso prefira, abra `backend/database.sql` para revisar a estrutura (tabelas `Usuarios`, `Servico`, `Venda`, `HorariosBons`).
 
-3. Crie o arquivo `.env` na pasta backend com as variáveis:
+3. Crie o arquivo `.env` na pasta `backend` com as variáveis (caso não exista, copie `.env.example`):
 
 ```
 API_PORTA=3000
@@ -49,17 +52,13 @@ KEY=sua_chave_secreta_jwt
 ```
 
 4. Inicie o servidor:
-
-- Em desenvolvimento (com nodemon):
-```
-npm start
-```
-- Em produção:
-```
-node app.js
+```powershell
+npm start  # rodando com nodemon (desenvolvimento)
 ```
 
-O servidor será executado na porta definida na variável `API_PORTA`.
+5. Abra o frontend pela URL servida pelo backend (recomendado) em `http://localhost:3000` — o app já serve os arquivos estáticos da pasta `frontend`.
+
+OBS: O backend tenta usar `api_porta`, `API_PORTA` ou `PORT` (em maiúsculas/minúsculas) para definir a porta. Se você tiver dúvidas, confira a saída do servidor no terminal (ex.: `Servidor iniciado em: http://localhost:3000`).
 
 ## Endpoints da API
 
@@ -123,10 +122,52 @@ O servidor será executado na porta definida na variável `API_PORTA`.
 
 - GET `/config` — Retorna informações de configuração do backend (ex.: `apiUrl`) geradas a partir do `.env` (útil para frontends estáticos lerem a porta base).
 
+### Observações de uso
+- O backend também serve a pasta `frontend` automaticamente (`express.static('frontend')`) — assim ao abrir `http://localhost:<porta>` você carrega o frontend integrado à API.
+- O JWT é gerado a partir da chave `KEY` em `.env`. Mantenha essa chave secreta em produção.
+
+### cURL / testes rápidos
+- Ler o `apiUrl` configurado pelo `.env`:
+```bash
+curl http://localhost:3000/config
+```
+- Criar usuário (exemplo):
+```bash
+curl -X POST http://localhost:3000/criar -H "Content-Type: application/json" -d '{"usuario":"Teste","email":"teste@ex.com","senha":"senha123","telefone":"11988885555","cidade":"São Paulo"}'
+```
+ - Login:
+```bash
+curl -X POST http://localhost:3000/entrar -H "Content-Type: application/json" -d '{"email":"teste@ex.com","senha":"senha123"}'
+```
+
+### Exemplos rápidos (cURL)
+
+- Fazer login:
+```bash
+curl -X POST http://localhost:3000/entrar -H "Content-Type: application/json" -d '{"email":"seu@email","senha":"sua_senha"}'
+```
+
+- Criar venda:
+```bash
+curl -X POST http://localhost:3000/vendas -H "Content-Type: application/json" -d '{"id_servico":1,"cep":"12345-678","bairro":"Centro","logradouro":"Rua A","numero":"10","quantidade":1,"valor_total":50.00}'
+```
+
+### Observações de segurança e desenvolvimento
+- Atualmente as senhas são encriptadas com MD5 (presente no serviço de cadastro). Isso não é recomendado para produção; prefira algoritmos modernos como `bcrypt`.
+- Se for usar em produção, considere HTTPS, variáveis de ambiente seguras e rotinas de rotação de chaves.
+- Se a infraestrutura crescer, adicione validações mais robustas, testes automatizados e CI/CD.
+
 ## Autenticação
 
 - A API utiliza JWT para autenticação.
 - Inclua o token no header `Authorization` como `Bearer <token>` para endpoints protegidos.
+
+### Testes e Postman
+- Não há testes automatizados incluídos; recomendamos usar Postman, Insomnia ou `curl` durante o desenvolvimento. Exemplos de requisições foram colocadas acima.
+
+### Contribuição
+- Preferência por PRs pequenos e claros, com descrição do que foi alterado.
+- Se estiver fazendo mudanças no banco de dados, inclua um script SQL de migração ou atualize o `database.sql`.
 
 ## Considerações
 
